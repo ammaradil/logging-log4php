@@ -47,7 +47,7 @@ class LoggerAppenderMongoDB extends LoggerAppender {
 	// ******************************************
 	
 	/** Default prefix for the {@link $host}. */	
-	const DEFAULT_MONGO_URL_PREFIX = 'mongodb://';
+	const DEFAULT_MONGO_URL_PREFIX = '';
 	
 	/** Default value for {@link $host}, without a prefix. */
 	const DEFAULT_MONGO_HOST = 'localhost';
@@ -122,14 +122,9 @@ class LoggerAppenderMongoDB extends LoggerAppender {
 	 */
 	public function activateOptions() {
 		try {
-			$this->connection = new Mongo(sprintf('%s:%d', $this->host, $this->port), array('timeout' => $this->timeout));
+			$mongodbServerPath = "mongodb://" . $this->userName . ":" . $this->password . "@" . $this->host . ":" . $this->port . "/" . $this->databaseName;
+			$this->connection = new MongoClient($mongodbServerPath);
 			$db	= $this->connection->selectDB($this->databaseName);
-			if ($this->userName !== null && $this->password !== null) {
-				$authResult = $db->authenticate($this->userName, $this->password);
-				if ($authResult['ok'] == floatval(0)) {
-					throw new Exception($authResult['errmsg'], $authResult['ok']);
-				}
-			}
 			$this->collection = $db->selectCollection($this->collectionName);
 		} catch (MongoConnectionException $ex) {
 			$this->closed = true;
